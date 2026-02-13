@@ -1,3 +1,5 @@
+Voici la version mise à jour de ta roadmap. Remplace le contenu de ton fichier `ROADMAP.md` par celui-ci.
+
 ```markdown
 # Roadmap : Émulateur CPU 6502 en C
 
@@ -18,28 +20,28 @@ Le projet sera divisé en fichiers sources (`src/`) et en-têtes (`include/`) po
 
 ### Phase 1 : Infrastructure de base ✅
 - [x] Initialiser le dépôt GitHub.
-- [x] Configurer l'environnement WSL et VS Code (Token, Extensions).
+- [x] Configurer l'environnement WSL et VS Code.
 - [x] Configurer le `Makefile` (compilation et règle `run`).
 - [x] Créer les fichiers de base (`main.c`, `types.h`).
-- [x] Définir les types personnalisés (`u8`, `u16`) dans `types.h`.
+- [x] Définir les types personnalisés (`u8`, `u16`).
 - [x] Configurer IntelliSense (`.vscode/c_cpp_properties.json`).
 
-### Phase 2 : Le Sous-système Mémoire
-- [ ] Créer `memory.c` et `memory.h`.
-- [ ] Allouer un tableau de 64 Ko (65536 octets) pour la RAM.
-- [ ] Implémenter `mem_read(u16 address)`.
-- [ ] Implémenter `mem_write(u16 address, u8 value)`.
-- [ ] Tester : Écrire une valeur en mémoire et la relire pour vérifier l'intégrité.
+### Phase 2 : Le Sous-système Mémoire ✅
+- [x] Créer `memory.c` et `memory.h`.
+- [x] Allouer un tableau de 64 Ko (65536 octets) pour la RAM.
+- [x] Implémenter `mem_read(u16 address)`.
+- [x] Implémenter `mem_write(u16 address, u8 value)`.
+- [x] Tester : Écrire une valeur en mémoire et la relire pour vérifier l'intégrité.
 
 ### Phase 3 : Structure du CPU
-- [ ] Créer `cpu.c` et `cpu.h`.
-- [ ] Créer la structure `CPU` contenant les registres :
+- [x] Créer `cpu.c` et `cpu.h`.
+- [x] Créer la structure `CPU` contenant les registres :
     - `A` (Accumulateur)
     - `X`, `Y` (Registres d'index)
     - `PC` (Program Counter - 16 bits)
     - `SP` (Stack Pointer)
-- [ ] Créer la structure ou l'énumération pour les Flags (`N`, `V`, `B`, `D`, `I`, `Z`, `C`).
-- [ ] Implémenter `cpu_reset()` : Initialiser les registres et charger le vecteur de reset à l'adresse `0xFFFC`.
+- [x] Créer la structure ou l'énumération pour les Flags (`N`, `V`, `B`, `D`, `I`, `Z`, `C`).
+- [x] Implémenter `cpu_reset()` : Initialiser les registres et charger le vecteur de reset à l'adresse `0xFFFC`.
 
 ### Phase 4 : Le Cœur (Fetch, Decode, Execute)
 - [ ] Implémenter le cycle principal dans `cpu_step()` :

@@ -1,30 +1,39 @@
 #include <stdio.h>
-#include <assert.h> // Pour les tests
+#include <assert.h>
 #include "types.h"
 #include "memory.h"
+#include "cpu.h"
 
 int main(int argc, char **argv) {
     printf("=== Emulateur 6502 ===\n");
-    printf("Phase 2 : Test Memoire.\n\n");
+    printf("Phase 3 : Test du CPU.\n\n");
 
-    // 1. Créer et initialiser la mémoire
+    // 1. Initialiser la mémoire
     Memory mem;
     mem_init(&mem);
-    printf("Memoire initialisee (64 Ko alloues).\n");
 
-    // 2. Tester l'écriture
-    u16 test_addr = 0x1234;
-    u8 test_val = 0xAB;
-    printf("Ecriture de 0x%02X a l'adresse 0x%04X...\n", test_val, test_addr);
-    mem_write(&mem, test_addr, test_val);
+    // 2. Préparer le vecteur de RESET
+    // On va dire au CPU de commencer à l'adresse 0x8000
+    // On écrit 0x00 à l'adresse 0xFFFC (Low byte)
+    // On écrit 0x80 à l'adresse 0xFFFD (High byte)
+    mem_write(&mem, 0xFFFC, 0x00);
+    mem_write(&mem, 0xFFFD, 0x80);
 
-    // 3. Tester la lecture
-    u8 read_val = mem_read(&mem, test_addr);
-    printf("Lecture de l'adresse 0x%04X : 0x%02X\n", test_addr, read_val);
+    // 3. Initialiser le CPU
+    CPU cpu;
+    cpu_reset(&cpu, &mem);
 
-    // 4. Vérification automatique
-    assert(read_val == test_val);
-    printf("\nSUCCES : La memoire fonctionne correctement !\n");
+    // 4. Vérifications
+    printf("Registres après reset :\n");
+    printf("PC : 0x%04X (Attendu : 0x8000)\n", cpu.PC);
+    printf("SP : 0x%02X (Attendu : 0xFD)\n", cpu.SP);
+    printf("P  : 0x%02X (Attendu : 0x24)\n", cpu.P);
+
+    assert(cpu.PC == 0x8000);
+    assert(cpu.SP == 0xFD);
+    assert(cpu.P == 0x24);
+
+    printf("\nSUCCES : CPU initialisé correctement !\n");
 
     return 0;
 }
