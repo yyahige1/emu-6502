@@ -44,7 +44,7 @@ Le projet sera divisé en fichiers sources (`src/`) et en-têtes (`include/`) po
 - [x] Implémenter `cpu_reset()` : Initialiser les registres et charger le vecteur de reset à l'adresse `0xFFFC`.
 
 ### Phase 4 : Le Cœur (Fetch, Decode, Execute)
-- [ ] Implémenter le cycle principal dans `cpu_step()` :
+- [x] Implémenter le cycle principal dans `cpu_step()` :
     1. Lire l'octet pointé par `PC` (Opcode).
     2. Incrémenter `PC`.
     3. Décoder l'instruction via une table de correspondance.

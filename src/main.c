@@ -4,36 +4,53 @@
 #include "memory.h"
 #include "cpu.h"
 
-int main(int argc, char **argv) {
+int main() {
     printf("=== Emulateur 6502 ===\n");
-    printf("Phase 3 : Test du CPU.\n\n");
+    printf("Phase 4 : Fetch Decode Execute.\n\n");
 
-    // 1. Initialiser la mémoire
+    // 1. Init Mémoire
     Memory mem;
     mem_init(&mem);
 
-    // 2. Préparer le vecteur de RESET
-    // On va dire au CPU de commencer à l'adresse 0x8000
-    // On écrit 0x00 à l'adresse 0xFFFC (Low byte)
-    // On écrit 0x80 à l'adresse 0xFFFD (High byte)
+    // 2. Charger un petit programme en mémoire à l'adresse 0x8000
+    // A9 05 -> LDA #$05
+    // A2 0A -> LDX #$0A
+    // EA    -> NOP
+    mem_write(&mem, 0x8000, 0xA9);
+    mem_write(&mem, 0x8001, 0x05);
+    mem_write(&mem, 0x8002, 0xA2);
+    mem_write(&mem, 0x8003, 0x0A);
+    mem_write(&mem, 0x8004, 0xEA);
+
+    // Indiquer au CPU de démarrer à 0x8000
     mem_write(&mem, 0xFFFC, 0x00);
     mem_write(&mem, 0xFFFD, 0x80);
 
-    // 3. Initialiser le CPU
+    // 3. Init CPU
     CPU cpu;
-    cpu_reset(&cpu, &mem);
+    cpu_reset(&cpu, &mem); // On passe l'adresse de 'mem', le CPU la stocke dans son pointeur
 
-    // 4. Vérifications
-    printf("Registres après reset :\n");
-    printf("PC : 0x%04X (Attendu : 0x8000)\n", cpu.PC);
-    printf("SP : 0x%02X (Attendu : 0xFD)\n", cpu.SP);
-    printf("P  : 0x%02X (Attendu : 0x24)\n", cpu.P);
+    // 4. Exécuter quelques pas
+    printf("Execution des instructions...\n");
+    
+    // Instruction 1 : LDA
+    cpu_step(&cpu);
+    printf("Apres LDA #$05 : A = 0x%02X (Attendu: 0x05)\n", cpu.A);
+    assert(cpu.A == 0x05);
 
-    assert(cpu.PC == 0x8000);
-    assert(cpu.SP == 0xFD);
-    assert(cpu.P == 0x24);
+    // Instruction 2 : LDX
+    cpu_step(&cpu);
+    printf("Apres LDX #$0A : X = 0x%02X (Attendu: 0x0A)\n", cpu.X);
+    assert(cpu.X == 0x0A);
 
-    printf("\nSUCCES : CPU initialisé correctement !\n");
+    // Instruction 3 : NOP
+    cpu_step(&cpu);
+    printf("Apres NOP : PC = 0x%04X (Attendu: 0x8005)\n", cpu.PC);
+    assert(cpu.PC == 0x8005);
+
+    printf("\nSUCCES : Le CPU execute du code !\n");
+    // Correction du warning : on utilise %lu (long unsigned) au lieu de %llu
+    printf("Cycles totaux : %lu\n", (unsigned long)cpu.cycles);
 
     return 0;
 }

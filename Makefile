@@ -5,8 +5,7 @@ CC=gcc
 CFLAGS=-Wall -Wextra -Iinclude -g
 
 # Les sources (AJOUT DE src/cpu.c ICI)
-SRC=src/main.c src/memory.c src/cpu.c
-
+SRC=src/main.c src/memory.c src/cpu.c src/instructions.c
 # La cible par défaut
 TARGET=emu-6502
 
