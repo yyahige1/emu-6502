@@ -6,57 +6,55 @@
 
 int main() {
     printf("=== Emulateur 6502 ===\n");
-    printf("Phase 5 & 6 : Addressing Modes & Table Lookup.\n\n");
+    printf("Phase 7 : Transferts et Branchements.\n\n");
 
     Memory mem;
     mem_init(&mem);
 
-    // Adresse de départ : 0x8000
+    // Vecteur de Reset
     mem_write(&mem, 0xFFFC, 0x00);
     mem_write(&mem, 0xFFFD, 0x80);
 
-    // Programme
+    // Programme à 0x8000
+    // Objectif : Faire une boucle qui décrémente X de 5 à 0
     u16 start = 0x8000;
+    
     mem_write(&mem, start++, 0xA9); // LDA #$05
     mem_write(&mem, start++, 0x05);
     
-    mem_write(&mem, start++, 0x85); // STA $00 (Zero Page)
-    mem_write(&mem, start++, 0x00);
+    mem_write(&mem, start++, 0xAA); // TAX (X = 5)
     
-    mem_write(&mem, start++, 0xA9); // LDA #$00 (Reset A)
-    mem_write(&mem, start++, 0x00);
+    u16 loop_addr = start; // Adresse du début de la boucle
+    
+    mem_write(&mem, start++, 0xCA); // DEX (X--)
+    
+    mem_write(&mem, start++, 0xD0); // BNE (Branch if Not Equal) -> Retour au DEX
+    // Calcul du saut relatif : loop_addr - (adresse_apres_offset)
+    // adresse_apres_offset sera 'start + 1'
+    s8 offset = loop_addr - (start + 1);
+    mem_write(&mem, start++, (u8)offset); 
 
-    mem_write(&mem, start++, 0xA5); // LDA $00 (Zero Page Load)
-    mem_write(&mem, start++, 0x00);
-
-    mem_write(&mem, start++, 0x8D); // STA $1234 (Absolute Store)
-    mem_write(&mem, start++, 0x34); // Low byte
-    mem_write(&mem, start++, 0x12); // High byte
+    mem_write(&mem, start++, 0xEA); // NOP (Fin)
 
     CPU cpu;
     cpu_reset(&cpu, &mem);
 
-    // Execution pas à pas
-    cpu_step(&cpu); // LDA #$05
-    assert(cpu.A == 5);
-    printf("[OK] LDA Immediate : A = 5\n");
+    printf("Execution de la boucle...\n");
+    
+    // On exécute pas à pas jusqu'à ce que X soit 0
+    // Normalement, le CPU va boucler plusieurs fois sur DEX / BNE
+    // On met une sécurité pour éviter une boucle infinie si le code bug
+    int max_steps = 100;
+    while (cpu.PC < 0x8008 && max_steps > 0) {
+        cpu_step(&cpu);
+        max_steps--;
+    }
 
-    cpu_step(&cpu); // STA $00
-    assert(mem_read(&mem, 0x0000) == 5);
-    printf("[OK] STA Zero Page : Mem[0x00] = 5\n");
+    printf("Valeur finale de X : %d (Attendu : 0)\n", cpu.X);
+    printf("Cycles totaux : %lu\n", (unsigned long)cpu.cycles);
 
-    cpu_step(&cpu); // LDA #$00
-    assert(cpu.A == 0);
-    printf("[OK] LDA Immediate : A = 0\n");
+    assert(cpu.X == 0);
 
-    cpu_step(&cpu); // LDA $00
-    assert(cpu.A == 5); // On doit retrouver 5
-    printf("[OK] LDA Zero Page : A = 5 (lu depuis la RAM)\n");
-
-    cpu_step(&cpu); // STA $1234
-    assert(mem_read(&mem, 0x1234) == 5);
-    printf("[OK] STA Absolute : Mem[0x1234] = 5\n");
-
-    printf("\nSUCCES : Architecture modulaire operationnelle !\n");
+    printf("\nSUCCES : Le CPU a executé une boucle correctement !\n");
     return 0;
 }

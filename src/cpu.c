@@ -69,6 +69,50 @@ static void init_lookup_table() {
     lookup[0xEA].addrmode = addr_immediate; // NOP n'a pas d'adressage, mais on met un défaut
     lookup[0xEA].name = "NOP";
     lookup[0xEA].cycles = 2;
+
+        // --- Nouveaux Opcodes ---
+
+    // TAX (AA) - Implied
+    lookup[0xAA].instruction = ins_TAX;
+    lookup[0xAA].addrmode = addr_implied;
+    lookup[0xAA].name = "TAX";
+    lookup[0xAA].cycles = 2;
+
+    // TXA (8A) - Implied
+    lookup[0x8A].instruction = ins_TXA;
+    lookup[0x8A].addrmode = addr_implied;
+    lookup[0x8A].name = "TXA";
+    lookup[0x8A].cycles = 2;
+
+    // INX (E8) - Implied
+    lookup[0xE8].instruction = ins_INX;
+    lookup[0xE8].addrmode = addr_implied;
+    lookup[0xE8].name = "INX";
+    lookup[0xE8].cycles = 2;
+
+    // DEX (CA) - Implied
+    lookup[0xCA].instruction = ins_DEX;
+    lookup[0xCA].addrmode = addr_implied;
+    lookup[0xCA].name = "DEX";
+    lookup[0xCA].cycles = 2;
+
+    // BEQ (F0) - Relative
+    lookup[0xF0].instruction = ins_BEQ;
+    lookup[0xF0].addrmode = addr_relative;
+    lookup[0xF0].name = "BEQ";
+    lookup[0xF0].cycles = 2; // Base cycles (3 si saut pris, géré dans l'instruction)
+
+    // BNE (D0) - Relative
+    lookup[0xD0].instruction = ins_BNE;
+    lookup[0xD0].addrmode = addr_relative;
+    lookup[0xD0].name = "BNE";
+    lookup[0xD0].cycles = 2;
+
+    // JMP Absolute (4C)
+    lookup[0x4C].instruction = ins_JMP;
+    lookup[0x4C].addrmode = addr_absolute;
+    lookup[0x4C].name = "JMP ABS";
+    lookup[0x4C].cycles = 3;
 }
 
 void cpu_set_flag(CPU *cpu, u8 flag, int value) {
