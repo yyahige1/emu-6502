@@ -1,0 +1,18 @@
+# Fichiers objets (compilation intermédiaire)
+*.o
+*.obj
+
+# Exécutable final
+emu-6502
+
+# Dossiers de compilation
+build/
+bin/
+
+# Fichiers de l'IDE / Éditeur
+.vscode/
+*.code-workspace
+.idea/
+
+# Fichiers système
+.DS_Store
