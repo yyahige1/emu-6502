@@ -13,12 +13,16 @@ Ce projet a pour but de comprendre le fonctionnement interne d'un processeur 8-b
     * Registre de statut (Flags N, V, B, D, I, Z, C).
     * Vecteur de Reset (démarrage à l'adresse 0xFFFC).
 * Jeu d'instructions (En cours) :
-    * Transferts : LDA, LDX, STA, STX.
+    * Load/Store : LDA, LDX, STA (Modes : Immediate, Zero Page, Absolute).
+    * Registres : TAX, TXA, INX, DEX.
+    * Sauts : JMP (Inconditionnel), BEQ, BNE (Conditionnels).
     * Contrôle : NOP.
 * Modes d'adressage (En cours) :
     * Immediate (#$val)
     * Zero Page ($addr)
     * Absolute ($addr)
+    * Implied (Aucun paramètre, ex: INX)
+    * Relative (Pour les branchements conditionnels)
 
 ## Installation et Compilation
 
