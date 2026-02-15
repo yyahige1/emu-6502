@@ -15,24 +15,26 @@
 #define FLAG_N (1 << 7)
 
 typedef struct {
-    u8 A;      
-    u8 X;      
-    u8 Y;      
-    u8 SP;     
-    u16 PC;    
-    u8 P;      
-    
+    u8 A, X, Y, SP;
+    u16 PC;
+    u8 P;
     u64 cycles;
+    Memory *mem;
 
-    // C'est ici qu'il faut l'ajouter !
-    Memory *mem; // Pointeur vers la mémoire (8 octets seulement)
+    // NOUVEAU : Variables temporaires pour les modes d'adressage
+    u16 addr_abs;     // L'adresse calculée (ex: 0x1234)
+    u8 fetched;       // La donnée lue à cette adresse
+
 } CPU;
 
+// Prototypes
 void cpu_reset(CPU *cpu, Memory *mem);
 void cpu_step(CPU *cpu);
-
-// Helpers flags
 void cpu_set_flag(CPU *cpu, u8 flag, int value);
 int cpu_get_flag(CPU *cpu, u8 flag);
+
+// Définition du type Pointeur de Fonction pour les instructions/adressages
+typedef void (*InstructionFunc)(CPU *cpu);
+typedef void (*AddrModeFunc)(CPU *cpu);
 
 #endif

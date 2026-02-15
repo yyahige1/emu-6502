@@ -3,9 +3,9 @@
 
 #include "cpu.h"
 
-// Instructions de base
-void ins_LDA_immediate(CPU *cpu); // Load Accumulator (Immediate mode)
-void ins_LDX_immediate(CPU *cpu); // Load X (Immediate mode)
-void ins_NOP(CPU *cpu);           // No Operation
+void ins_LDA(CPU *cpu);
+void ins_LDX(CPU *cpu);
+void ins_STA(CPU *cpu);
+void ins_NOP(CPU *cpu);
 
 #endif

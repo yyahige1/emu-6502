@@ -6,51 +6,57 @@
 
 int main() {
     printf("=== Emulateur 6502 ===\n");
-    printf("Phase 4 : Fetch Decode Execute.\n\n");
+    printf("Phase 5 & 6 : Addressing Modes & Table Lookup.\n\n");
 
-    // 1. Init Mémoire
     Memory mem;
     mem_init(&mem);
 
-    // 2. Charger un petit programme en mémoire à l'adresse 0x8000
-    // A9 05 -> LDA #$05
-    // A2 0A -> LDX #$0A
-    // EA    -> NOP
-    mem_write(&mem, 0x8000, 0xA9);
-    mem_write(&mem, 0x8001, 0x05);
-    mem_write(&mem, 0x8002, 0xA2);
-    mem_write(&mem, 0x8003, 0x0A);
-    mem_write(&mem, 0x8004, 0xEA);
-
-    // Indiquer au CPU de démarrer à 0x8000
+    // Adresse de départ : 0x8000
     mem_write(&mem, 0xFFFC, 0x00);
     mem_write(&mem, 0xFFFD, 0x80);
 
-    // 3. Init CPU
-    CPU cpu;
-    cpu_reset(&cpu, &mem); // On passe l'adresse de 'mem', le CPU la stocke dans son pointeur
-
-    // 4. Exécuter quelques pas
-    printf("Execution des instructions...\n");
+    // Programme
+    u16 start = 0x8000;
+    mem_write(&mem, start++, 0xA9); // LDA #$05
+    mem_write(&mem, start++, 0x05);
     
-    // Instruction 1 : LDA
-    cpu_step(&cpu);
-    printf("Apres LDA #$05 : A = 0x%02X (Attendu: 0x05)\n", cpu.A);
-    assert(cpu.A == 0x05);
+    mem_write(&mem, start++, 0x85); // STA $00 (Zero Page)
+    mem_write(&mem, start++, 0x00);
+    
+    mem_write(&mem, start++, 0xA9); // LDA #$00 (Reset A)
+    mem_write(&mem, start++, 0x00);
 
-    // Instruction 2 : LDX
-    cpu_step(&cpu);
-    printf("Apres LDX #$0A : X = 0x%02X (Attendu: 0x0A)\n", cpu.X);
-    assert(cpu.X == 0x0A);
+    mem_write(&mem, start++, 0xA5); // LDA $00 (Zero Page Load)
+    mem_write(&mem, start++, 0x00);
 
-    // Instruction 3 : NOP
-    cpu_step(&cpu);
-    printf("Apres NOP : PC = 0x%04X (Attendu: 0x8005)\n", cpu.PC);
-    assert(cpu.PC == 0x8005);
+    mem_write(&mem, start++, 0x8D); // STA $1234 (Absolute Store)
+    mem_write(&mem, start++, 0x34); // Low byte
+    mem_write(&mem, start++, 0x12); // High byte
 
-    printf("\nSUCCES : Le CPU execute du code !\n");
-    // Correction du warning : on utilise %lu (long unsigned) au lieu de %llu
-    printf("Cycles totaux : %lu\n", (unsigned long)cpu.cycles);
+    CPU cpu;
+    cpu_reset(&cpu, &mem);
 
+    // Execution pas à pas
+    cpu_step(&cpu); // LDA #$05
+    assert(cpu.A == 5);
+    printf("[OK] LDA Immediate : A = 5\n");
+
+    cpu_step(&cpu); // STA $00
+    assert(mem_read(&mem, 0x0000) == 5);
+    printf("[OK] STA Zero Page : Mem[0x00] = 5\n");
+
+    cpu_step(&cpu); // LDA #$00
+    assert(cpu.A == 0);
+    printf("[OK] LDA Immediate : A = 0\n");
+
+    cpu_step(&cpu); // LDA $00
+    assert(cpu.A == 5); // On doit retrouver 5
+    printf("[OK] LDA Zero Page : A = 5 (lu depuis la RAM)\n");
+
+    cpu_step(&cpu); // STA $1234
+    assert(mem_read(&mem, 0x1234) == 5);
+    printf("[OK] STA Absolute : Mem[0x1234] = 5\n");
+
+    printf("\nSUCCES : Architecture modulaire operationnelle !\n");
     return 0;
 }
