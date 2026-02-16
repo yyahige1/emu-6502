@@ -170,6 +170,52 @@ static void init_lookup_table() {
     lookup[0x60].addrmode = addr_implied;
     lookup[0x60].name = "RTS";
     lookup[0x60].cycles = 6;
+
+        // --- Arithmétique ---
+
+    // ADC (Add with Carry)
+    lookup[0x69].instruction = ins_ADC; lookup[0x69].addrmode = addr_immediate; lookup[0x69].name = "ADC IMM"; lookup[0x69].cycles = 2;
+    lookup[0x65].instruction = ins_ADC; lookup[0x65].addrmode = addr_zero_page; lookup[0x65].name = "ADC ZP"; lookup[0x65].cycles = 3;
+    lookup[0x6D].instruction = ins_ADC; lookup[0x6D].addrmode = addr_absolute; lookup[0x6D].name = "ADC ABS"; lookup[0x6D].cycles = 4;
+
+    // SBC (Subtract with Carry)
+    lookup[0xE9].instruction = ins_SBC; lookup[0xE9].addrmode = addr_immediate; lookup[0xE9].name = "SBC IMM"; lookup[0xE9].cycles = 2;
+    lookup[0xE5].instruction = ins_SBC; lookup[0xE5].addrmode = addr_zero_page; lookup[0xE5].name = "SBC ZP"; lookup[0xE5].cycles = 3;
+    lookup[0xED].instruction = ins_SBC; lookup[0xED].addrmode = addr_absolute; lookup[0xED].name = "SBC ABS"; lookup[0xED].cycles = 4;
+
+    // --- Comparaison ---
+
+    // CMP (Compare A)
+    lookup[0xC9].instruction = ins_CMP; lookup[0xC9].addrmode = addr_immediate; lookup[0xC9].name = "CMP IMM"; lookup[0xC9].cycles = 2;
+    lookup[0xC5].instruction = ins_CMP; lookup[0xC5].addrmode = addr_zero_page; lookup[0xC5].name = "CMP ZP"; lookup[0xC5].cycles = 3;
+    lookup[0xCD].instruction = ins_CMP; lookup[0xCD].addrmode = addr_absolute; lookup[0xCD].name = "CMP ABS"; lookup[0xCD].cycles = 4;
+
+    // CPX (Compare X)
+    lookup[0xE0].instruction = ins_CPX; lookup[0xE0].addrmode = addr_immediate; lookup[0xE0].name = "CPX IMM"; lookup[0xE0].cycles = 2;
+    
+    // CPY (Compare Y)
+    lookup[0xC0].instruction = ins_CPY; lookup[0xC0].addrmode = addr_immediate; lookup[0xC0].name = "CPY IMM"; lookup[0xC0].cycles = 2;
+
+    // --- Logique ---
+
+    // AND
+    lookup[0x29].instruction = ins_AND; lookup[0x29].addrmode = addr_immediate; lookup[0x29].name = "AND IMM"; lookup[0x29].cycles = 2;
+    
+    // ORA
+    lookup[0x09].instruction = ins_ORA; lookup[0x09].addrmode = addr_immediate; lookup[0x09].name = "ORA IMM"; lookup[0x09].cycles = 2;
+    
+    // EOR
+    lookup[0x49].instruction = ins_EOR; lookup[0x49].addrmode = addr_immediate; lookup[0x49].name = "EOR IMM"; lookup[0x49].cycles = 2;
+
+    // --- Drapeaux ---
+    lookup[0x18].instruction = ins_CLC; lookup[0x18].addrmode = addr_implied; lookup[0x18].name = "CLC"; lookup[0x18].cycles = 2;
+    lookup[0x38].instruction = ins_SEC; lookup[0x38].addrmode = addr_implied; lookup[0x38].name = "SEC"; lookup[0x38].cycles = 2;
+    lookup[0xD8].instruction = ins_CLD; lookup[0xD8].addrmode = addr_implied; lookup[0xD8].name = "CLD"; lookup[0xD8].cycles = 2;
+    lookup[0xF8].instruction = ins_SED; lookup[0xF8].addrmode = addr_implied; lookup[0xF8].name = "SED"; lookup[0xF8].cycles = 2;
+    lookup[0x58].instruction = ins_CLI; lookup[0x58].addrmode = addr_implied; lookup[0x58].name = "CLI"; lookup[0x58].cycles = 2;
+    lookup[0x78].instruction = ins_SEI; lookup[0x78].addrmode = addr_implied; lookup[0x78].name = "SEI"; lookup[0x78].cycles = 2;
+    lookup[0xB8].instruction = ins_CLV; lookup[0xB8].addrmode = addr_implied; lookup[0xB8].name = "CLV"; lookup[0xB8].cycles = 2;
+
 }
 
 void cpu_set_flag(CPU *cpu, u8 flag, int value) {

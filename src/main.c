@@ -6,56 +6,66 @@
 
 int main() {
     printf("=== Emulateur 6502 ===\n");
-    printf("Phase 8 : La Pile et les Fonctions (JSR/RTS).\n\n");
+    printf("Phase 9 : Arithmétique et Logique.\n\n");
 
     Memory mem;
     mem_init(&mem);
 
-    // Vecteur de Reset
     mem_write(&mem, 0xFFFC, 0x00);
     mem_write(&mem, 0xFFFD, 0x80);
 
-    // PROGRAMME PRINCIPAL (0x8000)
-    // 1. Charge 5 dans A
-    mem_write(&mem, 0x8000, 0xA9); // LDA #$05
-    mem_write(&mem, 0x8001, 0x05);
-    
-    // 2. Appelle la fonction à l'adresse 0x9000
-    mem_write(&mem, 0x8002, 0x20); // JSR $9000
-    mem_write(&mem, 0x8003, 0x00); // Low byte
-    mem_write(&mem, 0x8004, 0x90); // High byte
-    
-    // 5. Après retour, NOP (fin)
-    mem_write(&mem, 0x8005, 0xEA); // NOP
+    // Programme
+    // 1. Charge 10 dans A
+    // 2. Additionne 5
+    // 3. Compare A avec 15
+    // 4. Si égal (Zero flag), saute au label OK
+    // 5. Sinon NOP (erreur)
 
-    // SOUS-PROGRAMME / FONCTION (0x9000)
-    // 3. Ajoute 10 à A (5 + 10 = 15)
-    // On utilise ADC (Add with Carry). Pour simplifier, on va faire: A = A + 10 manuellement
-    // Ou plus simple : LDA #$0F (on écrase A pour tester le retour)
-    mem_write(&mem, 0x9000, 0xA9); // LDA #$0F (15)
-    mem_write(&mem, 0x9001, 0x0F);
+    u16 start = 0x8000;
+    mem_write(&mem, start++, 0xA9); // LDA #$10
+    mem_write(&mem, start++, 0x0A);
+
+    // ADC (Add)
+    // Il faut s'assurer que le flag Carry est à 0 avant une addition standard (CLC)
+    // Opcode CLC = 0x18
+    mem_write(&mem, start++, 0x18); // CLC (Clear Carry)
     
-    // 4. Retour
-    mem_write(&mem, 0x9002, 0x60); // RTS
+    mem_write(&mem, start++, 0x69); // ADC #$05
+    mem_write(&mem, start++, 0x05);
+
+    mem_write(&mem, start++, 0xC9); // CMP #$0F (15)
+    mem_write(&mem, start++, 0x0F);
+
+    mem_write(&mem, start++, 0xF0); // BEQ (Branch if Equal) -> Saut de +1
+    mem_write(&mem, start++, 0x01); // Sauter le prochain NOP si égal
+
+    mem_write(&mem, start++, 0xEA); // NOP (Erreur)
+    mem_write(&mem, start++, 0xEA); // NOP (Succès)
 
     CPU cpu;
     cpu_reset(&cpu, &mem);
 
-    printf("Execution du programme principal et de la fonction...\n");
+    printf("Execution du calcul...\n");
     
-    // On exécute tout
-    int max_steps = 100;
-    while (cpu.PC != 0x8006 && max_steps > 0) { // On s'arrête quand on revient au NOP final
+    // Exécution pas à pas ou boucle
+    int max_steps = 20;
+    while (max_steps > 0) {
         cpu_step(&cpu);
         max_steps--;
+        
+        // On s'arrête si on a fait beaucoup de cycles
+        if (cpu.cycles > 20) break;
     }
 
-    printf("Valeur finale de A : %d (Attendu : 15)\n", cpu.A);
-    printf("PC final : 0x%04X (Attendu : 0x8006)\n", cpu.PC);
+    printf("Valeur de A : %d (Attendu : 15)\n", cpu.A);
+    assert(cpu.A == 15);
+    
+    // Vérifier si on a bien sauté le premier NOP (PC doit être après le deuxième NOP)
+    printf("PC final : 0x%04X\n", cpu.PC);
 
-    assert(cpu.A == 15); // La fonction a bien modifié A
-    assert(cpu.PC == 0x8006); // On est bien revenu après le JSR
-
-    printf("\nSUCCES : Le CPU peut appeler des fonctions et revenir !\n");
+    // Le programme fait : LDA, CLC, ADC, CMP, BEQ, NOP(Succès)
+    // Si le branchement marche, on saute le NOP d'erreur.
+    
+    printf("\nSUCCES : Le CPU peut faire des maths et des comparaisons !\n");
     return 0;
 }

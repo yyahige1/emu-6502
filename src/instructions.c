@@ -111,3 +111,93 @@ void ins_RTS(CPU *cpu) {
     // Restaurer PC (et ajouter 1 car on avait sauvé PC-1)
     cpu->PC = return_addr + 1;
 }
+// --- Arithmétique ---
+
+void ins_ADC(CPU *cpu) {
+    u8 value = cpu->fetched;
+    u16 sum = (u16)cpu->A + (u16)value + (u16)cpu_get_flag(cpu, FLAG_C);
+
+    // Mise à jour des flags
+    cpu_set_flag(cpu, FLAG_C, sum > 0xFF);       // Carry si résultat > 255
+    cpu_set_flag(cpu, FLAG_Z, (sum & 0x00FF) == 0); // Zero
+    cpu_set_flag(cpu, FLAG_N, sum & 0x80);       // Négatif (bit 7)
+    
+    // Overflow (V) : Si le signe du résultat est incorrect par rapport aux opérandes
+    // Formule complexe simplifiée : V = (A ^ resultat) & (valeur ^ resultat) & 0x80
+    cpu_set_flag(cpu, FLAG_V, (~(cpu->A ^ value) & (cpu->A ^ sum) & 0x80));
+
+    cpu->A = sum & 0xFF; // On garde l'octet bas
+}
+
+void ins_SBC(CPU *cpu) {
+    u8 value = cpu->fetched;
+    u16 sub = (u16)cpu->A - (u16)value - (1 - (u16)cpu_get_flag(cpu, FLAG_C));
+
+    cpu_set_flag(cpu, FLAG_C, sub < 0x100); // Carry si pas d'emprunt (inversé en soustraction)
+    cpu_set_flag(cpu, FLAG_Z, (sub & 0x00FF) == 0);
+    cpu_set_flag(cpu, FLAG_N, sub & 0x80);
+    cpu_set_flag(cpu, FLAG_V, ((cpu->A ^ value) & (cpu->A ^ sub) & 0x80));
+
+    cpu->A = sub & 0xFF;
+}
+
+// --- Comparaison ---
+// Compare un registre avec une valeur. Le registre n'est pas modifié.
+// Flags : Z (égalité), C (Registre >= Valeur), N (Signe du résultat)
+
+void ins_CMP(CPU *cpu) {
+    u8 value = cpu->fetched;
+    u16 result = (u16)cpu->A - (u16)value;
+
+    cpu_set_flag(cpu, FLAG_C, cpu->A >= value); // Carry si A >= valeur
+    cpu_set_flag(cpu, FLAG_Z, result == 0);     // Zero si A == valeur
+    cpu_set_flag(cpu, FLAG_N, result & 0x80);   // Négatif
+}
+
+void ins_CPX(CPU *cpu) {
+    u8 value = cpu->fetched;
+    u16 result = (u16)cpu->X - (u16)value;
+
+    cpu_set_flag(cpu, FLAG_C, cpu->X >= value);
+    cpu_set_flag(cpu, FLAG_Z, result == 0);
+    cpu_set_flag(cpu, FLAG_N, result & 0x80);
+}
+
+void ins_CPY(CPU *cpu) {
+    u8 value = cpu->fetched;
+    u16 result = (u16)cpu->Y - (u16)value;
+
+    cpu_set_flag(cpu, FLAG_C, cpu->Y >= value);
+    cpu_set_flag(cpu, FLAG_Z, result == 0);
+    cpu_set_flag(cpu, FLAG_N, result & 0x80);
+}
+
+// --- Logique ---
+
+void ins_AND(CPU *cpu) {
+    cpu->A = cpu->A & cpu->fetched;
+    cpu_set_flag(cpu, FLAG_Z, cpu->A == 0);
+    cpu_set_flag(cpu, FLAG_N, (cpu->A & 0x80) != 0);
+}
+
+void ins_ORA(CPU *cpu) {
+    cpu->A = cpu->A | cpu->fetched;
+    cpu_set_flag(cpu, FLAG_Z, cpu->A == 0);
+    cpu_set_flag(cpu, FLAG_N, (cpu->A & 0x80) != 0);
+}
+
+void ins_EOR(CPU *cpu) {
+    cpu->A = cpu->A ^ cpu->fetched;
+    cpu_set_flag(cpu, FLAG_Z, cpu->A == 0);
+    cpu_set_flag(cpu, FLAG_N, (cpu->A & 0x80) != 0);
+}
+
+// --- Drapeaux (Flags) ---
+
+void ins_CLC(CPU *cpu) { cpu_set_flag(cpu, FLAG_C, 0); } // Clear Carry
+void ins_SEC(CPU *cpu) { cpu_set_flag(cpu, FLAG_C, 1); } // Set Carry
+void ins_CLD(CPU *cpu) { cpu_set_flag(cpu, FLAG_D, 0); } // Clear Decimal
+void ins_SED(CPU *cpu) { cpu_set_flag(cpu, FLAG_D, 1); } // Set Decimal
+void ins_CLI(CPU *cpu) { cpu_set_flag(cpu, FLAG_I, 0); } // Clear Interrupt
+void ins_SEI(CPU *cpu) { cpu_set_flag(cpu, FLAG_I, 1); } // Set Interrupt
+void ins_CLV(CPU *cpu) { cpu_set_flag(cpu, FLAG_V, 0); } // Clear Overflow
