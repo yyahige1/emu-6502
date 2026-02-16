@@ -21,4 +21,9 @@ void ins_BNE(CPU *cpu); // Branch if Not Equal (Z == 0)
 
 // Contrôle
 void ins_JMP(CPU *cpu); // Saut inconditionnel
+
+void ins_PHA(CPU *cpu);
+void ins_PLA(CPU *cpu);
+void ins_JSR(CPU *cpu); // Attention, conflit avec le nom de l'instruction JMP qu'on a mis avant
+void ins_RTS(CPU *cpu);
 #endif

@@ -37,4 +37,9 @@ int cpu_get_flag(CPU *cpu, u8 flag);
 typedef void (*InstructionFunc)(CPU *cpu);
 typedef void (*AddrModeFunc)(CPU *cpu);
 
+void cpu_push_byte(CPU *cpu, u8 value);
+u8 cpu_pull_byte(CPU *cpu);
+void cpu_push_word(CPU *cpu, u16 value);
+u16 cpu_pull_word(CPU *cpu);
+
 #endif

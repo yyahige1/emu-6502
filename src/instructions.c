@@ -77,3 +77,37 @@ void ins_JMP(CPU *cpu) {
     // Pour JMP, addr_abs a été calculée par addr_absolute
     cpu->PC = cpu->addr_abs;
 }
+
+// --- Instructions Pile ---
+
+// PHA : Push Accumulator
+void ins_PHA(CPU *cpu) {
+    cpu_push_byte(cpu, cpu->A);
+}
+
+void ins_PLA(CPU *cpu) {
+    cpu->A = cpu_pull_byte(cpu);
+    cpu_set_flag(cpu, FLAG_Z, cpu->A == 0);
+    cpu_set_flag(cpu, FLAG_N, (cpu->A & 0x80) != 0);
+}
+
+// --- Instructions Sous-Programmes ---
+
+// JSR : Jump to SubRoutine (Appel de fonction)
+void ins_JSR(CPU *cpu) {
+    // addr_abs a été calculée par addr_absolute
+    // On doit pousser PC-1 sur la pile (standard 6502)
+    cpu_push_word(cpu, cpu->PC - 1);
+    
+    // Sauter à l'adresse
+    cpu->PC = cpu->addr_abs;
+}
+
+// RTS : ReTurn from Subroutine (Retour de fonction)
+void ins_RTS(CPU *cpu) {
+    // Retirer l'adresse de la pile
+    u16 return_addr = cpu_pull_word(cpu);
+    
+    // Restaurer PC (et ajouter 1 car on avait sauvé PC-1)
+    cpu->PC = return_addr + 1;
+}

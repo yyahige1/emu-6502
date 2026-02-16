@@ -11,7 +11,36 @@ typedef struct {
     const char *name;
     u8 cycles;
 } OpcodeEntry;
+// ... (Includes existants)
 
+// --- Fonctions Privées pour la Pile ---
+
+// Écrire un octet sur la pile
+ void cpu_push_byte(CPU *cpu, u8 value) {
+    // L'adresse de la pile est 0x0100 + SP
+    mem_write(cpu->mem, 0x0100 + cpu->SP, value);
+    cpu->SP--; // La pile descend
+}
+
+// Lire un octet depuis la pile
+ u8 cpu_pull_byte(CPU *cpu) {
+    cpu->SP++; // La pile remonte
+    return mem_read(cpu->mem, 0x0100 + cpu->SP);
+}
+
+// Écrire une adresse (16 bits) sur la pile (pour JSR)
+ void cpu_push_word(CPU *cpu, u16 value) {
+    // On pousse l'octet haut puis l'octet bas
+    cpu_push_byte(cpu, (value >> 8) & 0xFF); // High byte
+    cpu_push_byte(cpu, value & 0xFF);        // Low byte
+}
+
+// Lire une adresse (16 bits) depuis la pile (pour RTS)
+ u16 cpu_pull_word(CPU *cpu) {
+    u16 lo = cpu_pull_byte(cpu);
+    u16 hi = cpu_pull_byte(cpu);
+    return (hi << 8) | lo;
+}
 // LA TABLE DES OPCODES (Look-up Table)
 // On ne remplit que ceux qu'on a codé pour l'instant
 static OpcodeEntry lookup[256];
@@ -66,7 +95,7 @@ static void init_lookup_table() {
 
     // NOP (EA)
     lookup[0xEA].instruction = ins_NOP;
-    lookup[0xEA].addrmode = addr_immediate; // NOP n'a pas d'adressage, mais on met un défaut
+    lookup[0xEA].addrmode = addr_implied; // NOP n'a pas d'adressage, mais on met un défaut
     lookup[0xEA].name = "NOP";
     lookup[0xEA].cycles = 2;
 
@@ -113,6 +142,34 @@ static void init_lookup_table() {
     lookup[0x4C].addrmode = addr_absolute;
     lookup[0x4C].name = "JMP ABS";
     lookup[0x4C].cycles = 3;
+
+        // --- Pile ---
+    
+    // PHA (48)
+    lookup[0x48].instruction = ins_PHA;
+    lookup[0x48].addrmode = addr_implied;
+    lookup[0x48].name = "PHA";
+    lookup[0x48].cycles = 3;
+
+    // PLA (68)
+    lookup[0x68].instruction = ins_PLA;
+    lookup[0x68].addrmode = addr_implied;
+    lookup[0x68].name = "PLA";
+    lookup[0x68].cycles = 4;
+
+    // --- Sous-Programmes ---
+
+    // JSR Absolute (20) - Appel de fonction
+    lookup[0x20].instruction = ins_JSR;
+    lookup[0x20].addrmode = addr_absolute;
+    lookup[0x20].name = "JSR";
+    lookup[0x20].cycles = 6;
+
+    // RTS (60) - Retour de fonction
+    lookup[0x60].instruction = ins_RTS;
+    lookup[0x60].addrmode = addr_implied;
+    lookup[0x60].name = "RTS";
+    lookup[0x60].cycles = 6;
 }
 
 void cpu_set_flag(CPU *cpu, u8 flag, int value) {
@@ -138,23 +195,31 @@ void cpu_reset(CPU *cpu, Memory *mem) {
 }
 
 void cpu_step(CPU *cpu) {
-    // 1. FETCH
+    // 1. Sauvegarder l'état avant l'action
+    u16 pc_before = cpu->PC;
+    u8 sp_before = cpu->SP;
+
+    // 2. FETCH
     u8 opcode = mem_read(cpu->mem, cpu->PC);
     cpu->PC++;
 
-    // 2. DECODE : Regarder dans la table
+    // 3. DECODE
     OpcodeEntry entry = lookup[opcode];
 
-    // Debug (Optionnel : commenter pour avoir une sortie propre)
-    // printf("Executing: %s (0x%02X) at PC 0x%04X\n", entry.name, opcode, cpu->PC-1);
+    // 4. DEBUG : Afficher ce qui va se passer
+    // %04X = adresse en hexadécimal 4 chiffres
+    // %02X = nombre en hexadécimal 2 chiffres
+    printf("[TRACE] PC: %04X | Opcode: %02X | Instruction: %-8s | SP: %02X -> ", 
+           pc_before, opcode, entry.name, sp_before);
 
-    // 3. ADDRESSING : Calculer où sont les données
-    // Cela remplit cpu->fetched ou cpu->addr_abs
+    // 5. ADDRESSING & EXECUTE
     entry.addrmode(cpu);
-
-    // 4. EXECUTE
     entry.instruction(cpu);
 
-    // 5. CYCLES
+    // 6. Afficher l'état APRÈS l'action
+    printf("A: %02X, X: %02X, SP: %02X, PC: %04X\n", 
+           cpu->A, cpu->X, cpu->SP, cpu->PC);
+
+    // 7. CYCLES
     cpu->cycles += entry.cycles;
 }
