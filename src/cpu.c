@@ -216,6 +216,40 @@ static void init_lookup_table() {
     lookup[0x78].instruction = ins_SEI; lookup[0x78].addrmode = addr_implied; lookup[0x78].name = "SEI"; lookup[0x78].cycles = 2;
     lookup[0xB8].instruction = ins_CLV; lookup[0xB8].addrmode = addr_implied; lookup[0xB8].name = "CLV"; lookup[0xB8].cycles = 2;
 
+
+     // --- Instructions Indexées par X ---
+
+    // STA Zero Page,X (95)
+    lookup[0x95].instruction = ins_STA;
+    lookup[0x95].addrmode = addr_zero_page_x;
+    lookup[0x95].name = "STA ZP,X";
+    lookup[0x95].cycles = 4;
+
+    // LDA Zero Page,X (B5)
+    lookup[0xB5].instruction = ins_LDA;
+    lookup[0xB5].addrmode = addr_zero_page_x;
+    lookup[0xB5].name = "LDA ZP,X";
+    lookup[0xB5].cycles = 4;
+
+    // LDA Absolute,X (BD)
+    lookup[0xBD].instruction = ins_LDA;
+    lookup[0xBD].addrmode = addr_absolute_x;
+    lookup[0xBD].name = "LDA ABS,X";
+    lookup[0xBD].cycles = 4; // (+1 si page traverse, on simplifie pour l'instant)
+
+    // ADC Absolute,X (7D)
+    lookup[0x7D].instruction = ins_ADC;
+    lookup[0x7D].addrmode = addr_absolute_x;
+    lookup[0x7D].name = "ADC ABS,X";
+    lookup[0x7D].cycles = 4;
+
+    // --- Instructions Indexées par Y ---
+
+    // LDA Absolute,Y (B9)
+    lookup[0xB9].instruction = ins_LDA;
+    lookup[0xB9].addrmode = addr_absolute_y;
+    lookup[0xB9].name = "LDA ABS,Y";
+    lookup[0xB9].cycles = 4;
 }
 
 void cpu_set_flag(CPU *cpu, u8 flag, int value) {
