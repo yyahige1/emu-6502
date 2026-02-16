@@ -21,12 +21,18 @@ typedef struct {
     u64 cycles;
     Memory *mem;
 
-    // NOUVEAU : Variables temporaires pour les modes d'adressage
-    u16 addr_abs;     // L'adresse calculée (ex: 0x1234)
-    u8 fetched;       // La donnée lue à cette adresse
+    // Variables temporaires adressage
+    u16 addr_abs;
+    u8 fetched;
+
+    // NOUVEAU : Interruptions en attente
+    u8 irq_pending; // Interrupt Request
+    u8 nmi_pending; // Non-Maskable Interrupt
 
 } CPU;
 
+// Prototypes interruption
+void cpu_nmi(CPU *cpu); // Déclencher une NMI
 // Prototypes
 void cpu_reset(CPU *cpu, Memory *mem);
 void cpu_step(CPU *cpu);

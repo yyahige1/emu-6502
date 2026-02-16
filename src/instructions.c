@@ -1,5 +1,5 @@
 #include "instructions.h"
-
+#include <stdio.h>
 // LDA : Charge une valeur dans A
 void ins_LDA(CPU *cpu) {
     cpu->A = cpu->fetched; // La valeur a été calculée par l'adressage
@@ -282,4 +282,43 @@ void ins_LSR(CPU *cpu) {
     cpu_set_flag(cpu, FLAG_Z, val == 0);
     cpu_set_flag(cpu, FLAG_N, 0);
     mem_write(cpu->mem, cpu->addr_abs, val);
+}
+
+// BRK : Interruption logicielle (Opcode 0x00)
+void ins_BRK(CPU *cpu) {
+    cpu->PC++; // Avancer PC
+
+    // DEBUG : Afficher ce qu'on va sauver
+   // printf("[DEBUG BRK] Sauvegarde PC sur la pile : 0x%04X\n", cpu->PC);
+
+    // Sauvegarde PC (High byte puis Low byte)
+    cpu_push_byte(cpu, (cpu->PC >> 8) & 0xFF);
+    cpu_push_byte(cpu, cpu->PC & 0xFF);
+
+    // Sauvegarde Status avec flag B
+    u8 status_with_break = cpu->P | FLAG_B | FLAG_U;
+    cpu_push_byte(cpu, status_with_break);
+
+    // Désactive interruptions
+    cpu_set_flag(cpu, FLAG_I, 1);
+
+    // Lit le vecteur d'interruption (IRQ ou BRK)
+    u16 lo = mem_read(cpu->mem, 0xFFFE);
+    u16 hi = mem_read(cpu->mem, 0xFFFF);
+    cpu->PC = (hi << 8) | lo;
+    
+    //printf("[DEBUG BRK] Saut à l'adresse 0x%04X\n", cpu->PC);
+}
+
+void ins_RTI(CPU *cpu) {
+    // Récupère Status
+    cpu->SP++;
+    cpu->P = mem_read(cpu->mem, 0x0100 + cpu->SP);
+
+    // Récupère PC
+    u16 lo = cpu_pull_byte(cpu);
+    u16 hi = cpu_pull_byte(cpu);
+    cpu->PC = (hi << 8) | lo;
+
+    //printf("[DEBUG RTI] Restauration PC depuis la pile : 0x%04X\n", cpu->PC);
 }

@@ -284,6 +284,9 @@ static void init_lookup_table() {
     lookup[0x4A].instruction = ins_LSR_ACC; lookup[0x4A].addrmode = addr_implied; lookup[0x4A].name = "LSR A"; lookup[0x4A].cycles = 2;
     lookup[0x46].instruction = ins_LSR; lookup[0x46].addrmode = addr_zero_page; lookup[0x46].name = "LSR ZP"; lookup[0x46].cycles = 5;
     lookup[0x4E].instruction = ins_LSR; lookup[0x4E].addrmode = addr_absolute; lookup[0x4E].name = "LSR ABS"; lookup[0x4E].cycles = 6;
+    // --- Interruptions ---
+    lookup[0x00].instruction = ins_BRK; lookup[0x00].addrmode = addr_implied; lookup[0x00].name = "BRK"; lookup[0x00].cycles = 7;
+    lookup[0x40].instruction = ins_RTI; lookup[0x40].addrmode = addr_implied; lookup[0x40].name = "RTI"; lookup[0x40].cycles = 6;
 }
 
 void cpu_set_flag(CPU *cpu, u8 flag, int value) {
@@ -303,15 +306,51 @@ void cpu_reset(CPU *cpu, Memory *mem) {
     u16 lo = mem_read(mem, 0xFFFC);
     u16 hi = mem_read(mem, 0xFFFD);
     cpu->PC = (hi << 8) | lo;
-
+    cpu->irq_pending = 0;
+    cpu->nmi_pending = 0;
     // Initialiser la table des opcodes
     init_lookup_table();
 }
+void cpu_nmi(CPU *cpu) {
+    cpu->nmi_pending = 1;
+}
 
+// Fonction interne pour exécuter une interruption
+static void cpu_handle_interrupt(CPU *cpu, u16 vector_addr) {
+    // Sauvegarder PC
+    cpu_push_byte(cpu, (cpu->PC >> 8) & 0xFF);
+    cpu_push_byte(cpu, cpu->PC & 0xFF);
+
+    // Sauvegarder Status (P). Contrairement à BRK, le flag B est à 0 pour les interruptions matérielles.
+    u8 status = cpu->P | FLAG_U; // Flag U toujours à 1
+    cpu_push_byte(cpu, status);
+
+    // Désactiver interruptions
+    cpu_set_flag(cpu, FLAG_I, 1);
+
+    // Sauter au vecteur
+    u16 lo = mem_read(cpu->mem, vector_addr);
+    u16 hi = mem_read(cpu->mem, vector_addr + 1);
+    cpu->PC = (hi << 8) | lo;
+    cpu->cycles += 7; // Les interruptions prennent du temps
+}
 void cpu_step(CPU *cpu) {
     // 1. Sauvegarder l'état avant l'action
     u16 pc_before = cpu->PC;
     u8 sp_before = cpu->SP;
+// 1. NMI (Non-Maskable) - Toujours exécutée si demandée
+    if (cpu->nmi_pending) {
+        cpu->nmi_pending = 0;
+        cpu_handle_interrupt(cpu, 0xFFFA); // Vecteur NMI à $FFFA
+        return; // On saute l'instruction normale
+    }
+
+    // 2. IRQ (Interrupt Request) - Seulement si le flag I est à 0
+    if (cpu->irq_pending && !cpu_get_flag(cpu, FLAG_I)) {
+        cpu->irq_pending = 0;
+        cpu_handle_interrupt(cpu, 0xFFFE); // Vecteur IRQ à $FFFE
+        return;
+    }
 
     // 2. FETCH
     u8 opcode = mem_read(cpu->mem, cpu->PC);
@@ -323,16 +362,16 @@ void cpu_step(CPU *cpu) {
     // 4. DEBUG : Afficher ce qui va se passer
     // %04X = adresse en hexadécimal 4 chiffres
     // %02X = nombre en hexadécimal 2 chiffres
-    printf("[TRACE] PC: %04X | Opcode: %02X | Instruction: %-8s | SP: %02X -> ", 
-           pc_before, opcode, entry.name, sp_before);
+   // printf("[TRACE] PC: %04X | Opcode: %02X | Instruction: %-8s | SP: %02X -> ", 
+        //   pc_before, opcode, entry.name, sp_before);
 
     // 5. ADDRESSING & EXECUTE
     entry.addrmode(cpu);
     entry.instruction(cpu);
 
     // 6. Afficher l'état APRÈS l'action
-    printf("A: %02X, X: %02X, SP: %02X, PC: %04X\n", 
-           cpu->A, cpu->X, cpu->SP, cpu->PC);
+    //printf("A: %02X, X: %02X, SP: %02X, PC: %04X\n", 
+     //      cpu->A, cpu->X, cpu->SP, cpu->PC);
 
     // 7. CYCLES
     cpu->cycles += entry.cycles;

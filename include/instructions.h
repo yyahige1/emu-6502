@@ -65,4 +65,7 @@ void ins_LSR(CPU *cpu); // Shift Right (Décalage à droite)
 
 void ins_ASL_ACC(CPU *cpu); // Shift Left (Décalage à gauche)
 void ins_LSR_ACC(CPU *cpu); // Shift Right (Décalage à droite)
+
+void ins_BRK(CPU *cpu); // Break (Software Interrupt)
+void ins_RTI(CPU *cpu); // Return from Interrupt
 #endif

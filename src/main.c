@@ -6,52 +6,69 @@
 
 int main() {
     printf("=== Emulateur 6502 ===\n");
-    printf("Phase 11 : Instructions Y, INC, DEC, Shifts.\n\n");
+    printf("Phase 12 : Interruptions (BRK, RTI).\n\n");
 
     Memory mem;
     mem_init(&mem);
 
+    // --- Configuration des Vecteurs ---
+    // Reset Vector ($FFFC) -> Programme Principal à $8000
     mem_write(&mem, 0xFFFC, 0x00);
     mem_write(&mem, 0xFFFD, 0x80);
 
-    // Programme
-    // 1. LDY #$05 (Charger 5 dans Y)
-    // 2. STY $20 (Stocker Y à l'adresse 0x0020)
-    // 3. INC $20 (Incrémenter la case mémoire -> devient 6)
-    // 4. ASL $20 (Décalage à gauche -> 6 * 2 = 12)
-    // 5. LDA $20 (Charger le résultat dans A pour vérifier)
+    // IRQ/BRK Vector ($FFFE) -> Routine Interruption à $9000
+    mem_write(&mem, 0xFFFE, 0x00);
+    mem_write(&mem, 0xFFFF, 0x90);
 
-    u16 start = 0x8000;
-    mem_write(&mem, start++, 0xA0); // LDY #$05
-    mem_write(&mem, start++, 0x05);
+    // --- Programme Principal ($8000) ---
+    // 1. LDA #$00 (A = 0)
+    mem_write(&mem, 0x8000, 0xA9);
+    mem_write(&mem, 0x8001, 0x00);
     
-    mem_write(&mem, start++, 0x84); // STY $20
-    mem_write(&mem, start++, 0x20);
+    // 2. BRK (Saut à l'interruption)
+    mem_write(&mem, 0x8002, 0x00); // Opcode BRK
+    mem_write(&mem, 0x8003, 0x00); // Signature byte (ignorée par notre BRK qui fait PC++)
 
-    mem_write(&mem, start++, 0xE6); // INC $20
-    mem_write(&mem, start++, 0x20);
+    // 4. NOP (Retour ici après RTI)
+    mem_write(&mem, 0x8004, 0xEA);
 
-    mem_write(&mem, start++, 0x06); // ASL $20
-    mem_write(&mem, start++, 0x20);
-
-    mem_write(&mem, start++, 0xA5); // LDA $20
-    mem_write(&mem, start++, 0x20);
+    // --- Routine d'Interruption ($9000) ---
+    // Modifie A pour prouver qu'on est passé ici
+    mem_write(&mem, 0x9000, 0xA9); // LDA #$FF
+    mem_write(&mem, 0x9001, 0xFF);
+    
+    // Retour de l'interruption
+    mem_write(&mem, 0x9002, 0x40); // RTI
 
     CPU cpu;
     cpu_reset(&cpu, &mem);
 
     printf("Execution...\n");
-    int max_steps = 20;
-    while (max_steps > 0) {
-        cpu_step(&cpu);
-        max_steps--;
-    }
-
-    printf("Valeur en memoire (0x0020) : %d (Attendu : 12)\n", mem_read(&mem, 0x0020));
-    printf("Registre A : %d\n", cpu.A);
     
-    assert(mem_read(&mem, 0x0020) == 12); // 5 -> 6 -> 12
+    // 1. Exécution normale (LDA)
+    cpu_step(&cpu);
+    printf("Avant BRK : A = %d\n", cpu.A);
 
-    printf("\nSUCCES : Manipulation memoire et bits OK !\n");
+    // 2. Exécution du BRK (interruption)
+    cpu_step(&cpu); 
+    
+    // 3. Dans l'interruption (LDA #$FF)
+    cpu_step(&cpu);
+    
+    // 4. Dans l'interruption (RTI)
+    // 4. Dans l'interruption (RTI)
+    cpu_step(&cpu);
+    
+    printf("Apres RTI  : A = %d (Attendu : 255)\n", cpu.A);
+    printf("PC retourné: 0x%04X (Attendu : 0x8004)\n", cpu.PC);
+    assert(cpu.A == 0xFF);
+    assert(cpu.PC == 0x8004); // On est revenu, le NOP n'est pas encore exécuté
+
+    // 5. Exécuter le NOP qui suit le retour
+    cpu_step(&cpu);
+    printf("Apres NOP  : PC = 0x%04X (Attendu : 0x8005)\n", cpu.PC);
+    assert(cpu.PC == 0x8005);
+
+    printf("\nSUCCES : Le CPU gère les interruptions et reprend son cours !\n");
     return 0;
 }
