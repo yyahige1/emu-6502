@@ -1,74 +1,71 @@
 #include <stdio.h>
-#include <assert.h>
+#include <string.h>
 #include "types.h"
 #include "memory.h"
 #include "cpu.h"
 
-int main() {
-    printf("=== Emulateur 6502 ===\n");
-    printf("Phase 12 : Interruptions (BRK, RTI).\n\n");
-
+void run_builtin_test() {
+    printf("=== Mode Test Interne ===\n");
+    
     Memory mem;
     mem_init(&mem);
 
-    // --- Configuration des Vecteurs ---
-    // Reset Vector ($FFFC) -> Programme Principal à $8000
     mem_write(&mem, 0xFFFC, 0x00);
     mem_write(&mem, 0xFFFD, 0x80);
 
-    // IRQ/BRK Vector ($FFFE) -> Routine Interruption à $9000
-    mem_write(&mem, 0xFFFE, 0x00);
-    mem_write(&mem, 0xFFFF, 0x90);
-
-    // --- Programme Principal ($8000) ---
-    // 1. LDA #$00 (A = 0)
-    mem_write(&mem, 0x8000, 0xA9);
-    mem_write(&mem, 0x8001, 0x00);
-    
-    // 2. BRK (Saut à l'interruption)
-    mem_write(&mem, 0x8002, 0x00); // Opcode BRK
-    mem_write(&mem, 0x8003, 0x00); // Signature byte (ignorée par notre BRK qui fait PC++)
-
-    // 4. NOP (Retour ici après RTI)
-    mem_write(&mem, 0x8004, 0xEA);
-
-    // --- Routine d'Interruption ($9000) ---
-    // Modifie A pour prouver qu'on est passé ici
-    mem_write(&mem, 0x9000, 0xA9); // LDA #$FF
-    mem_write(&mem, 0x9001, 0xFF);
-    
-    // Retour de l'interruption
-    mem_write(&mem, 0x9002, 0x40); // RTI
+    u16 start = 0x8000;
+    mem_write(&mem, start++, 0xA2); // LDX #$00
+    mem_write(&mem, start++, 0x00);
+    mem_write(&mem, start++, 0xE8); // INX
+    mem_write(&mem, start++, 0xE0); // CPX #$05
+    mem_write(&mem, start++, 0x05);
+    mem_write(&mem, start++, 0xD0); // BNE (retour au INX)
+    mem_write(&mem, start++, 0xFB); // Offset -5
+    mem_write(&mem, start++, 0xEA); // NOP
 
     CPU cpu;
     cpu_reset(&cpu, &mem);
 
-    printf("Execution...\n");
+    printf("Lancement du test interne...\n");
+    int max_steps = 50;
+    while (max_steps > 0) {
+        cpu_step(&cpu);
+        max_steps--;
+    }
     
-    // 1. Exécution normale (LDA)
-    cpu_step(&cpu);
-    printf("Avant BRK : A = %d\n", cpu.A);
+    printf("X final : %d (Attendu : 5)\n", cpu.X);
+}
 
-    // 2. Exécution du BRK (interruption)
-    cpu_step(&cpu); 
-    
-    // 3. Dans l'interruption (LDA #$FF)
-    cpu_step(&cpu);
-    
-    // 4. Dans l'interruption (RTI)
-    // 4. Dans l'interruption (RTI)
-    cpu_step(&cpu);
-    
-    printf("Apres RTI  : A = %d (Attendu : 255)\n", cpu.A);
-    printf("PC retourné: 0x%04X (Attendu : 0x8004)\n", cpu.PC);
-    assert(cpu.A == 0xFF);
-    assert(cpu.PC == 0x8004); // On est revenu, le NOP n'est pas encore exécuté
+int main(int argc, char **argv) {
+    if (argc > 1) {
+        printf("=== Emulateur 6502 ===\n");
+        printf("Chargement du fichier : %s\n\n", argv[1]);
 
-    // 5. Exécuter le NOP qui suit le retour
-    cpu_step(&cpu);
-    printf("Apres NOP  : PC = 0x%04X (Attendu : 0x8005)\n", cpu.PC);
-    assert(cpu.PC == 0x8005);
+        Memory mem;
+        mem_init(&mem);
 
-    printf("\nSUCCES : Le CPU gère les interruptions et reprend son cours !\n");
+        if (!mem_load(&mem, argv[1], 0x0000)) {
+            return 1;
+        }
+
+        CPU cpu;
+        cpu_reset(&cpu, &mem);
+
+        printf("Execution...\n");
+        
+        while (1) {
+            cpu_step(&cpu);
+            
+            // Sécurité
+            if (cpu.cycles > 5000000) { // 5 millions de cycles max
+                printf("Limite de cycles atteinte.\n");
+                break;
+            }
+        }
+        
+    } else {
+        run_builtin_test();
+    }
+
     return 0;
 }

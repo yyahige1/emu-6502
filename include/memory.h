@@ -15,5 +15,7 @@ typedef struct {
 void mem_init(Memory *mem);
 u8 mem_read(Memory *mem, u16 address);
 void mem_write(Memory *mem, u16 address, u8 value);
-
+// Charge un fichier binaire en mémoire à partir d'une adresse donnée
+// Retourne la taille du fichier chargé, ou 0 si erreur
+int mem_load(Memory *mem, const char *filename, u16 offset);
 #endif
