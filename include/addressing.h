@@ -13,4 +13,6 @@ void addr_zero_page_x(CPU *cpu); // Adresse = (Opérande + X) & 0xFF
 void addr_zero_page_y(CPU *cpu); // Adresse = (Opérande + Y) & 0xFF
 void addr_absolute_x(CPU *cpu);  // Adresse = Opérande + X
 void addr_absolute_y(CPU *cpu);  // Adresse = Opérande + Y
+
+void addr_accumulator(CPU *cpu); // L'opérande est le registre A lui-même (ex: ASL A)
 #endif

@@ -201,3 +201,85 @@ void ins_SED(CPU *cpu) { cpu_set_flag(cpu, FLAG_D, 1); } // Set Decimal
 void ins_CLI(CPU *cpu) { cpu_set_flag(cpu, FLAG_I, 0); } // Clear Interrupt
 void ins_SEI(CPU *cpu) { cpu_set_flag(cpu, FLAG_I, 1); } // Set Interrupt
 void ins_CLV(CPU *cpu) { cpu_set_flag(cpu, FLAG_V, 0); } // Clear Overflow
+
+// --- Registre Y ---
+
+void ins_LDY(CPU *cpu) {
+    cpu->Y = cpu->fetched;
+    cpu_set_flag(cpu, FLAG_Z, cpu->Y == 0);
+    cpu_set_flag(cpu, FLAG_N, (cpu->Y & 0x80) != 0);
+}
+
+void ins_STY(CPU *cpu) {
+    mem_write(cpu->mem, cpu->addr_abs, cpu->Y);
+}
+
+void ins_INY(CPU *cpu) {
+    cpu->Y++;
+    cpu_set_flag(cpu, FLAG_Z, cpu->Y == 0);
+    cpu_set_flag(cpu, FLAG_N, (cpu->Y & 0x80) != 0);
+}
+
+void ins_DEY(CPU *cpu) {
+    cpu->Y--;
+    cpu_set_flag(cpu, FLAG_Z, cpu->Y == 0);
+    cpu_set_flag(cpu, FLAG_N, (cpu->Y & 0x80) != 0);
+}
+
+// --- Mémoire INC/DEC ---
+// C'est spécial : on lit la valeur, on modifie, et on réécrit dans addr_abs
+
+void ins_INC(CPU *cpu) {
+    u8 val = cpu->fetched;
+    val++;
+    cpu_set_flag(cpu, FLAG_Z, val == 0);
+    cpu_set_flag(cpu, FLAG_N, (val & 0x80) != 0);
+    
+    // Réécrire en mémoire
+    mem_write(cpu->mem, cpu->addr_abs, val);
+}
+
+void ins_DEC(CPU *cpu) {
+    u8 val = cpu->fetched;
+    val--;
+    cpu_set_flag(cpu, FLAG_Z, val == 0);
+    cpu_set_flag(cpu, FLAG_N, (val & 0x80) != 0);
+    
+    mem_write(cpu->mem, cpu->addr_abs, val);
+}
+
+// --- Bits (Shifts) ---// 1. ASL Accumulator (pour le registre A)
+void ins_ASL_ACC(CPU *cpu) {
+    cpu_set_flag(cpu, FLAG_C, (cpu->A & 0x80) != 0);
+    cpu->A = cpu->A << 1;
+    cpu_set_flag(cpu, FLAG_Z, cpu->A == 0);
+    cpu_set_flag(cpu, FLAG_N, (cpu->A & 0x80) != 0);
+}
+
+// 2. ASL Mémoire (pour une adresse)
+void ins_ASL(CPU *cpu) {
+    u8 val = cpu->fetched;
+    cpu_set_flag(cpu, FLAG_C, (val & 0x80) != 0);
+    val = val << 1;
+    cpu_set_flag(cpu, FLAG_Z, val == 0);
+    cpu_set_flag(cpu, FLAG_N, (val & 0x80) != 0);
+    mem_write(cpu->mem, cpu->addr_abs, val);
+}
+
+// 3. LSR Accumulator
+void ins_LSR_ACC(CPU *cpu) {
+    cpu_set_flag(cpu, FLAG_C, (cpu->A & 0x01) != 0); 
+    cpu->A = cpu->A >> 1;
+    cpu_set_flag(cpu, FLAG_Z, cpu->A == 0);
+    cpu_set_flag(cpu, FLAG_N, 0); 
+}
+
+// 4. LSR Mémoire
+void ins_LSR(CPU *cpu) {
+    u8 val = cpu->fetched;
+    cpu_set_flag(cpu, FLAG_C, (val & 0x01) != 0);
+    val = val >> 1;
+    cpu_set_flag(cpu, FLAG_Z, val == 0);
+    cpu_set_flag(cpu, FLAG_N, 0);
+    mem_write(cpu->mem, cpu->addr_abs, val);
+}

@@ -48,4 +48,21 @@ void ins_SED(CPU *cpu);
 void ins_CLI(CPU *cpu);
 void ins_SEI(CPU *cpu);
 void ins_CLV(CPU *cpu);
+
+// --- Registre Y ---
+void ins_LDY(CPU *cpu);
+void ins_STY(CPU *cpu);
+void ins_INY(CPU *cpu);
+void ins_DEY(CPU *cpu);
+
+// --- Mémoire ---
+void ins_INC(CPU *cpu); // Incrémente une case mémoire
+void ins_DEC(CPU *cpu); // Décrémente une case mémoire
+
+// --- Bits ---
+void ins_ASL(CPU *cpu); // Shift Left (Décalage à gauche)
+void ins_LSR(CPU *cpu); // Shift Right (Décalage à droite)
+
+void ins_ASL_ACC(CPU *cpu); // Shift Left (Décalage à gauche)
+void ins_LSR_ACC(CPU *cpu); // Shift Right (Décalage à droite)
 #endif

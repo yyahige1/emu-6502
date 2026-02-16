@@ -96,3 +96,9 @@ void addr_absolute_y(CPU *cpu) {
     cpu->addr_abs = base + cpu->Y;
     cpu->fetched = mem_read(cpu->mem, cpu->addr_abs);
 }
+
+// Mode Accumulator : L'opération se fait sur le registre A
+void addr_accumulator(CPU *cpu) {
+    // On met fetched à la valeur de A pour que l'instruction puisse travailler dessus
+    cpu->fetched = cpu->A;
+}

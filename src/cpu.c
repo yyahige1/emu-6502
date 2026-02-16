@@ -250,6 +250,40 @@ static void init_lookup_table() {
     lookup[0xB9].addrmode = addr_absolute_y;
     lookup[0xB9].name = "LDA ABS,Y";
     lookup[0xB9].cycles = 4;
+
+        // --- LDY (Load Y) ---
+    lookup[0xA0].instruction = ins_LDY; lookup[0xA0].addrmode = addr_immediate; lookup[0xA0].name = "LDY IMM"; lookup[0xA0].cycles = 2;
+    lookup[0xA4].instruction = ins_LDY; lookup[0xA4].addrmode = addr_zero_page; lookup[0xA4].name = "LDY ZP"; lookup[0xA4].cycles = 3;
+    lookup[0xAC].instruction = ins_LDY; lookup[0xAC].addrmode = addr_absolute; lookup[0xAC].name = "LDY ABS"; lookup[0xAC].cycles = 4;
+    lookup[0xB4].instruction = ins_LDY; lookup[0xB4].addrmode = addr_zero_page_x; lookup[0xB4].name = "LDY ZP,X"; lookup[0xB4].cycles = 4;
+    lookup[0xBC].instruction = ins_LDY; lookup[0xBC].addrmode = addr_absolute_x; lookup[0xBC].name = "LDY ABS,X"; lookup[0xBC].cycles = 4;
+
+    // --- STY (Store Y) ---
+    lookup[0x84].instruction = ins_STY; lookup[0x84].addrmode = addr_zero_page; lookup[0x84].name = "STY ZP"; lookup[0x84].cycles = 3;
+    lookup[0x8C].instruction = ins_STY; lookup[0x8C].addrmode = addr_absolute; lookup[0x8C].name = "STY ABS"; lookup[0x8C].cycles = 4;
+    lookup[0x94].instruction = ins_STY; lookup[0x94].addrmode = addr_zero_page_x; lookup[0x94].name = "STY ZP,X"; lookup[0x94].cycles = 4;
+
+    // --- INY / DEY ---
+    lookup[0xC8].instruction = ins_INY; lookup[0xC8].addrmode = addr_implied; lookup[0xC8].name = "INY"; lookup[0xC8].cycles = 2;
+    lookup[0x88].instruction = ins_DEY; lookup[0x88].addrmode = addr_implied; lookup[0x88].name = "DEY"; lookup[0x88].cycles = 2;
+
+    // --- INC / DEC (Mémoire) ---
+    lookup[0xE6].instruction = ins_INC; lookup[0xE6].addrmode = addr_zero_page; lookup[0xE6].name = "INC ZP"; lookup[0xE6].cycles = 5;
+    lookup[0xF6].instruction = ins_INC; lookup[0xF6].addrmode = addr_zero_page_x; lookup[0xF6].name = "INC ZP,X"; lookup[0xF6].cycles = 6;
+    lookup[0xEE].instruction = ins_INC; lookup[0xEE].addrmode = addr_absolute; lookup[0xEE].name = "INC ABS"; lookup[0xEE].cycles = 6;
+    
+    lookup[0xC6].instruction = ins_DEC; lookup[0xC6].addrmode = addr_zero_page; lookup[0xC6].name = "DEC ZP"; lookup[0xC6].cycles = 5;
+    lookup[0xD6].instruction = ins_DEC; lookup[0xD6].addrmode = addr_zero_page_x; lookup[0xD6].name = "DEC ZP,X"; lookup[0xD6].cycles = 6;
+    lookup[0xCE].instruction = ins_DEC; lookup[0xCE].addrmode = addr_absolute; lookup[0xCE].name = "DEC ABS"; lookup[0xCE].cycles = 6;
+
+    // --- ASL / LSR ---
+    lookup[0x0A].instruction = ins_ASL_ACC; lookup[0x0A].addrmode = addr_implied; lookup[0x0A].name = "ASL A"; lookup[0x0A].cycles = 2;
+    lookup[0x06].instruction = ins_ASL; lookup[0x06].addrmode = addr_zero_page; lookup[0x06].name = "ASL ZP"; lookup[0x06].cycles = 5;
+    lookup[0x0E].instruction = ins_ASL; lookup[0x0E].addrmode = addr_absolute; lookup[0x0E].name = "ASL ABS"; lookup[0x0E].cycles = 6;
+
+    lookup[0x4A].instruction = ins_LSR_ACC; lookup[0x4A].addrmode = addr_implied; lookup[0x4A].name = "LSR A"; lookup[0x4A].cycles = 2;
+    lookup[0x46].instruction = ins_LSR; lookup[0x46].addrmode = addr_zero_page; lookup[0x46].name = "LSR ZP"; lookup[0x46].cycles = 5;
+    lookup[0x4E].instruction = ins_LSR; lookup[0x4E].addrmode = addr_absolute; lookup[0x4E].name = "LSR ABS"; lookup[0x4E].cycles = 6;
 }
 
 void cpu_set_flag(CPU *cpu, u8 flag, int value) {
