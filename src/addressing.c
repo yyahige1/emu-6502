@@ -102,3 +102,63 @@ void addr_accumulator(CPU *cpu) {
     // On met fetched à la valeur de A pour que l'instruction puisse travailler dessus
     cpu->fetched = cpu->A;
 }
+
+// Mode Indirect : Utilisé par JMP (0x6C)
+void addr_indirect(CPU *cpu) {
+    // 1. Lire l'adresse pointeur (16 bits)
+    u16 ptr_lo = mem_read(cpu->mem, cpu->PC);
+    cpu->PC++;
+    u16 ptr_hi = mem_read(cpu->mem, cpu->PC);
+    cpu->PC++;
+    
+    u16 ptr = (ptr_hi << 8) | ptr_lo;
+
+    // 2. Lire l'adresse de destination à l'adresse pointeur
+    // Simulation du Bug du 6502 : Si le pointeur est sur une frontière de page (ex: $xxFF),
+    // l'octet haut est lu au début de la même page (ex: $xx00) au lieu de la page suivante.
+    
+    u16 addr_lo = mem_read(cpu->mem, ptr);
+    u16 addr_hi;
+    
+    // Si le pointeur fini par FF, on fait l'erreur (wrap around)
+    if ((ptr & 0x00FF) == 0x00FF) {
+        addr_hi = mem_read(cpu->mem, ptr & 0xFF00); // On revient au début de la page
+    } else {
+        addr_hi = mem_read(cpu->mem, ptr + 1); // Cas normal
+    }
+    
+    cpu->addr_abs = (addr_hi << 8) | addr_lo;
+}
+// Mode Zero Page,Y
+// Mode (Indirect, X) : "Indexed Indirect"
+// Ex: LDA ($20, X). On prend l'adresse $20, on ajoute X, on lit l'adresse réelle à cet endroit.
+void addr_indirect_x(CPU *cpu) {
+    u8 zp_base = mem_read(cpu->mem, cpu->PC);
+    cpu->PC++;
+    
+    // L'adresse du pointeur est (zp_base + X) & 0xFF (on reste dans la Zero Page)
+    u16 ptr_addr = (u16)(zp_base + cpu->X) & 0x00FF;
+    
+    // On lit l'adresse 16 bits à l'adresse du pointeur
+    u16 lo = mem_read(cpu->mem, ptr_addr);
+    u16 hi = mem_read(cpu->mem, (ptr_addr + 1) & 0x00FF); // Wrap si on dépasse la page
+    
+    cpu->addr_abs = (hi << 8) | lo;
+    cpu->fetched = mem_read(cpu->mem, cpu->addr_abs);
+}
+
+// Mode (Indirect), Y : "Indirect Indexed"
+// Ex: LDA ($20), Y. On lit l'adresse à $20, puis on ajoute Y.
+void addr_indirect_y(CPU *cpu) {
+    u8 zp_base = mem_read(cpu->mem, cpu->PC);
+    cpu->PC++;
+    
+    // On lit l'adresse 16 bits stockée dans la Zero Page (sans ajouter Y !)
+    u16 lo = mem_read(cpu->mem, (u16)zp_base);
+    u16 hi = mem_read(cpu->mem, (u16)((zp_base + 1) & 0xFF)); // Wrap
+    
+    u16 base = (hi << 8) | lo;
+    
+    cpu->addr_abs = base + cpu->Y;
+    cpu->fetched = mem_read(cpu->mem, cpu->addr_abs);
+}

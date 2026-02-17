@@ -68,4 +68,26 @@ void ins_LSR_ACC(CPU *cpu); // Shift Right (Décalage à droite)
 
 void ins_BRK(CPU *cpu); // Break (Software Interrupt)
 void ins_RTI(CPU *cpu); // Return from Interrupt
+
+void ins_TXS(CPU *cpu);
+void ins_TSX(CPU *cpu);
+
+void ins_TYA(CPU *cpu);
+void ins_TAY(CPU *cpu);
+
+void ins_BPL(CPU *cpu);
+void ins_BMI(CPU *cpu);
+void ins_BCS(CPU *cpu);
+void ins_BCC(CPU *cpu);
+void ins_BVS(CPU *cpu);
+void ins_BVC(CPU *cpu);
+
+void ins_PLP(CPU *cpu);
+void ins_PHP(CPU *cpu);
+void ins_STX(CPU *cpu);
+void ins_BIT(CPU *cpu);
+void ins_ROL_ACC(CPU *cpu);
+void ins_ROL(CPU *cpu);
+void ins_ROR_ACC(CPU *cpu);
+void ins_ROR(CPU *cpu);
 #endif

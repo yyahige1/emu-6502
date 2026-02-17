@@ -49,16 +49,49 @@ int main(int argc, char **argv) {
         }
 
         CPU cpu;
+        
+        // 1. Initialisation (UNE SEULE FOIS)
         cpu_reset(&cpu, &mem);
+        
+        // 2. Forçage du démarrage (UNE SEULE FOIS)
+        //printf("Forcage du demarrage a 0x0400...\n");
+        cpu.PC = 0x0400; 
 
         printf("Execution...\n");
         
+        // 3. Boucle d'exécution
         while (1) {
+
+           
             cpu_step(&cpu);
+// Détection du succès ou de l'échec
+            // 1. Détection du SUCCÈS
+            // Si le PC arrive à l'adresse 0x37A3, le test est fini et réussi
+            if (cpu.PC == 0x37A3) {
+                printf("\n========================================\n");
+                printf("   TEST SUITE PASSED WITH SUCCESS !\n");
+                printf("   (Le programme a bouclé sur l'adresse de succès)\n");
+                printf("========================================\n");
+                break; // IMPORTANT : Arrête la boucle ici !
+            }
             
             // Sécurité
-            if (cpu.cycles > 5000000) { // 5 millions de cycles max
-                printf("Limite de cycles atteinte.\n");
+                        // Sécurité Timeout
+            // Sécurité Timeout
+            if (cpu.cycles > 10000000) {
+                printf("\nTimeout ! Le CPU semble bloque.\n");
+                printf("Adresse de blocage : 0x%04X\n", cpu.PC);
+                
+                // Lire le numéro du test en cours (adresse standard $0210 pour ce test ROM)
+                u8 test_num = mem_read(&mem, 0x0210);
+                printf("Numero du test en cours : %d\n", test_num);
+                
+                // Afficher l'etat des registres
+                printf("Registre A : 0x%02X\n", cpu.A);
+                printf("Valeur attendue en mem[$0F] : 0x%02X\n", mem_read(&mem, 0x0F));
+                printf("Etat bit-a-bit de P : ");
+for(int i=7; i>=0; i--) printf("%d", (cpu.P >> i) & 1);
+printf("\n");
                 break;
             }
         }

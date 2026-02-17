@@ -13,6 +13,11 @@ void addr_zero_page_x(CPU *cpu); // Adresse = (Opérande + X) & 0xFF
 void addr_zero_page_y(CPU *cpu); // Adresse = (Opérande + Y) & 0xFF
 void addr_absolute_x(CPU *cpu);  // Adresse = Opérande + X
 void addr_absolute_y(CPU *cpu);  // Adresse = Opérande + Y
-
+void addr_indirect(CPU *cpu); // Adresse = contenu de l'adresse donnée (utilisé par JMP)
 void addr_accumulator(CPU *cpu); // L'opérande est le registre A lui-même (ex: ASL A)
+
+void addr_zero_page_y(CPU *cpu);
+
+void addr_indirect_x(CPU *cpu); // (Indirect,X)
+void addr_indirect_y(CPU *cpu); // (Indirect),Y
 #endif
